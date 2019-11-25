@@ -203,7 +203,8 @@
                 (assoc ::notifications/enable nil)
                 (not platform/desktop?)
                 (assoc ::initialize-wallet
-                       #(re-frame/dispatch [::initialize-wallet %])))
+                       (fn [accounts custom-tokens]
+                         (re-frame/dispatch [::initialize-wallet accounts custom-tokens]))))
               ;; NOTE: initializing mailserver depends on user mailserver
               ;; preference which is why we wait for config callback
               (protocol/initialize-protocol {:default-mailserver true})

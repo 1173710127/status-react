@@ -174,18 +174,22 @@
                    :symbol   symbol
                    :decimals (int decimals)
                    :color    (rand-nth colors/chat-colors)}]
-    (fx/merge {:db (assoc-in db [:wallet/all-tokens chain-key contract]
+    (fx/merge cofx
+              {:db (assoc-in db [:wallet/all-tokens chain-key contract]
                              (assoc new-token :custom? true))
                ::json-rpc/call [{:method "wallet_addCustomToken"
-                                 :params [new-token]}]}
+                                 :params [new-token]
+                                 :on-success #()}]}
               (wallet/add-custom-token new-token))))
 
 (fx/defn remove-custom-token
   [{:keys [db] :as cofx} {:keys [address] :as token}]
   (let [chain-key (ethereum/chain-keyword db)]
-    (fx/merge {:db (update-in db [:wallet/all-tokens chain-key] dissoc address)
+    (fx/merge cofx
+              {:db (update-in db [:wallet/all-tokens chain-key] dissoc address)
                ::json-rpc/call [{:method "wallet_deleteCustomToken"
-                                 :params [address]}]}
+                                 :params [address]
+                                 :on-success #()}]}
               (wallet/remove-custom-token token))))
 
 (fx/defn field-is-edited
