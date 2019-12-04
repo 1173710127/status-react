@@ -1,5 +1,5 @@
 { stdenv, utils, callPackage,
-  buildGoPackage, go, gomobile, openjdk, xcodeWrapper }:
+  buildGoPackage, go, gomobile, androidPkgs, openjdk, unzip, zip, xcodeWrapper }:
 
 { owner, repo, rev, cleanVersion, goPackagePath, src, host,
 
@@ -8,7 +8,7 @@
   config } @ args':
 
 let
-  inherit (stdenv.lib) concatStringsSep makeBinPath optional;
+  inherit (stdenv.lib) concatStringsSep makeBinPath optional optionals;
 
   targetConfig = config;
   buildStatusGo = callPackage ./build-status-go.nix {
@@ -21,14 +21,16 @@ let
   ];
 
   buildStatusGoMobileLib = buildStatusGo (args // {
-    nativeBuildInputs = [ gomobile ] ++ optional (targetConfig.name == "android") openjdk;
+    nativeBuildInputs = [ gomobile unzip zip ] ++ optional (targetConfig.name == "android") openjdk;
 
     buildMessage = "Building mobile library for ${targetConfig.name}";
     # Build mobile libraries
     buildPhase =
       let
         NIX_GOWORKDIR = "$NIX_BUILD_TOP/go-build";
-        CGO_LDFLAGS = concatStringsSep " " goBuildLdFlags;
+        CGO_LDFLAGS = concatStringsSep " " (goBuildLdFlags ++ [ "-extldflags=-Wl,--allow-multiple-definition" ]);
+        nimbusBridgeVendorDir = "$NIX_BUILD_TOP/go/src/${goPackagePath}/vendor/${goPackagePath}/eth-node/bridge/nimbus";
+        inherit (stdenv.lib) concatStrings mapAttrsToList optionalString;
       in with targetConfig; ''
       mkdir ${NIX_GOWORKDIR}
 
@@ -37,13 +39,47 @@ let
       export PATH=${makeBinPath [ gomobile.bin ]}:$PATH
       export NIX_GOWORKDIR=${NIX_GOWORKDIR}
       export ${concatStringsSep " " envVars}
+
+      # Build the Go library using gomobile for each of the configured platforms
+      ${concatStrings (mapAttrsToList (platform: platformConfig: ''
+
+      ${optionalString platformConfig.linkNimbus ''
+      # Copy the Nimbus API artifacts to the expected vendor location
+      cp ${platformConfig.nimbus}/{include/*,lib/libnimbus.a} ${nimbusBridgeVendorDir}
+      chmod +w ${nimbusBridgeVendorDir}/libnimbus.{a,h}
+      ''}
+
+      echo
+      echo "Building for target ${platformConfig.gomobileTarget}"
       gomobile bind \
-        -target=${name} \
-        -ldflags='${CGO_LDFLAGS}' \
+        -target=${platformConfig.gomobileTarget} \
+        -ldflags="${CGO_LDFLAGS}" \
         ${concatStringsSep " " gomobileExtraFlags} \
         ${goBuildFlags} \
-        -o ${outputFileName} \
+        -o ${outputFileName}-${platform}.aar \
         ${goPackagePath}/mobile
+
+      ${optionalString platformConfig.linkNimbus ''
+      rm ${nimbusBridgeVendorDir}/libnimbus.{a,h}
+      ''}
+      '') targetConfig.platforms)}
+
+      if [ "${targetConfig.name}" = 'android' ]; then
+        # Merge the platform-specific .aar files into a single one
+        local mergeDir='.aar'
+        mkdir $mergeDir
+        for f in *.aar; do
+          unzip -d $mergeDir -q -o -u $f
+        done
+        rm ${outputFileName}-*.aar
+        pushd $mergeDir > /dev/null
+          zip -r -o ../${outputFileName} *
+        popd > /dev/null
+        rm -rf $mergeDir
+        unzip -l ${outputFileName}
+      fi
+
+      # TODO: Merge iOS packages when linking with libnimbus.a
 
       rm -rf ${NIX_GOWORKDIR}
     '';
