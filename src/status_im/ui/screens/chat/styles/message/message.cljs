@@ -94,8 +94,8 @@
      :padding-left  (if platform/desktop? 24 8)}))
 
 (def message-author-touchable
-  {:margin-left        12
-   :padding-horizontal 2})
+  {:margin-left      12
+   :padding-vertical 2})
 
 (defn message-author [outgoing]
   (merge
