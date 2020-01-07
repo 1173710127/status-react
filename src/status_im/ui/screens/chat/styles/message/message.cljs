@@ -140,9 +140,10 @@
 
 (styles/defn emoji-message
   [{:keys [incoming-group]}]
-  {:font-size 40
-   :desktop   {:line-height 46}
-   :margin-top (if incoming-group 4 0)})
+  {:font-size    40
+   :margin-right 12
+   :desktop      {:line-height 46}
+   :margin-top   (if incoming-group 4 0)})
 
 (defn message-view
   [{:keys [content-type outgoing group-chat last-in-group?]}]
