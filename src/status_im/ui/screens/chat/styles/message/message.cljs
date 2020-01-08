@@ -140,7 +140,7 @@
 
 (styles/defn emoji-message
   [{:keys [incoming-group]}]
-  {:font-size    40
+  {:font-size    28
    :margin-right 12
    :desktop      {:line-height 46}
    :margin-top   (if incoming-group 4 0)})
