@@ -162,7 +162,7 @@
                                   4)}
    (if outgoing
      {:border-bottom-right-radius 4}
-     {:border-bottom-left-radius 4 })
+     {:border-bottom-left-radius 4})
 
    (if (= content-type constants/content-type-emoji)
      {:flex-direction :row}
