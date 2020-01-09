@@ -21,7 +21,7 @@
 
 (defn rpc->custom-bootnodes [custom-bootnodes]
   (reduce-kv (fn [acc chain custom-bootnodes]
-               (assoc acc (str chain) custom-bootnodes))
+               (assoc acc (name chain) custom-bootnodes))
              {}
              custom-bootnodes))
 
@@ -32,4 +32,6 @@
       (update :networks/networks rpc->networks)
       (update :wallet/visible-tokens rpc->visible-tokens)
       (update :pinned-mailservers rpc->pinned-mailservers)
+      (update :custom-bootnodes rpc->custom-bootnodes)
+      (update :custom-bootnodes-enabled? rpc->custom-bootnodes)
       (update :currency keyword)))
