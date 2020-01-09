@@ -11,12 +11,12 @@
   [outgoing]
   {:color (if outgoing colors/white colors/text)})
 
-(defn message-padding-top
+(defn message-margin-top
   [{:keys [last-in-group? display-username?]}]
   (if (and display-username?
            last-in-group?)
     6
-    2))
+    4))
 
 (defn last-message-padding
   [{:keys [first? typing]}]
@@ -25,10 +25,10 @@
 
 (defn message-body
   [{:keys [outgoing] :as message}]
-  (let [align (if outgoing :flex-end :flex-start)
+  (let [align     (if outgoing :flex-end :flex-start)
         direction (if outgoing :row-reverse :row)]
     {:flex-direction direction
-     :padding-top    (message-padding-top message)
+     :margin-top     (message-margin-top message)
      :align-self     align
      :align-items    align}))
 
@@ -159,7 +159,7 @@
                                          (or outgoing
                                              (not group-chat)))
                                   16
-                                  4)}
+                                  0)}
    (if outgoing
      {:border-bottom-right-radius 4}
      {:border-bottom-left-radius 4})
