@@ -155,25 +155,27 @@
      {:keys [hide-home-tooltip?]} [:multiaccount]]
     (let [list-ref (reagent/atom nil)]
       [list/section-list
-       {:sections                     [{:title :t/chats
-                                        :data (if @search-active? chats all-home-items)}]
-        :key-fn                        first
-        ;; true by default on iOS
-        :stickySectionHeadersEnabled   false
-        :keyboard-should-persist-taps  :always
-        :ref                           #(reset! list-ref %)
-        :pre-binded-header             [search-input-wrapper]
-        :footer                        [chat-list-footer hide-home-tooltip?]
-        :contentInset                  {:top styles/search-input-height}
-        :render-section-header-fn      (fn [data] [react/view])
-        :render-section-footer-fn      section-footer
-        :render-fn                     (fn [home-item]
-                                         [inner-item/home-list-item home-item])
-        :on-scroll-end-drag
-        (fn [e]
-          (let [y (-> e .-nativeEvent .-contentOffset .-y)]
-            (if (and (neg? y) (> y (- (/ styles/search-input-height 2))))
-              (.scrollToLocation @list-ref #js {:sectionIndex 0 :itemIndex 0}))))}])))
+       (merge
+        {:sections                     [{:title :t/chats
+                                         :data (if @search-active? chats all-home-items)}]
+         :key-fn                        first
+          ;; true by default on iOS
+         :stickySectionHeadersEnabled   false
+         :keyboard-should-persist-taps  :always
+         :ref                           #(reset! list-ref %)
+         :footer                        [chat-list-footer hide-home-tooltip?]
+         :contentInset                  {:top styles/search-input-height}
+         :render-section-header-fn      (fn [data] [react/view])
+         :render-section-footer-fn      section-footer
+         :render-fn                     (fn [home-item]
+                                          [inner-item/home-list-item home-item])
+         :header                        (when (or @search-active? (not-empty all-home-items))
+                                          [search-input-wrapper])
+         :on-scroll-end-drag
+         (fn [e]
+           (let [y (-> e .-nativeEvent .-contentOffset .-y)]
+             (if (and (neg? y) (> y (- (/ styles/search-input-height 2))))
+               (.scrollToLocation @list-ref #js {:sectionIndex 0 :itemIndex 0}))))})])))
 
 (views/defview home-action-button [home-width]
   (views/letsubs [logging-in? [:multiaccounts/login]]
