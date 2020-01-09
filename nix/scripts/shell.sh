@@ -56,6 +56,10 @@ if [ -n "${STATUS_GO_SRC_OVERRIDE}" ]; then
   statusGoConfig+="status_go.src_override=\"${STATUS_GO_SRC_OVERRIDE}\";"
 fi
 
+if [ -n "${STATUS_GO_ENABLE_NIMBUS}" ]; then
+  statusGoConfig+="status_go.enable_nimbus=true;"
+fi
+
 if [ -n "$statusGoConfig" ]; then
   shellArgs+=("--arg config {$statusGoConfig}")
 fi

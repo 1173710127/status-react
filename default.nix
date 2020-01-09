@@ -1,5 +1,5 @@
 {
-  config ? { }, # for passing status_go.src_override
+  config ? { }, # for passing status_go.src_override and status_go.enable_nimbus
 }:
 
 let

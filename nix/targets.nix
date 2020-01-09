@@ -12,7 +12,6 @@ let
   status-go = callPackage ./status-go {
     inherit (mobile) xcodeWrapper;
     androidPkgs = mobile.android.androidComposition;
-    targetNimbus = true;
   };
 
   desktop = callPackage ./desktop {

@@ -1,5 +1,5 @@
 { config, stdenv, callPackage, mkShell, mergeSh, buildGoPackage, go,
-  fetchFromGitHub, mkFilter, openjdk, androidPkgs, xcodeWrapper, targetNimbus ? false }:
+  fetchFromGitHub, mkFilter, openjdk, androidPkgs, xcodeWrapper }:
 
 let
   inherit (stdenv.lib)
@@ -7,9 +7,10 @@ let
     optional optionalString strings attrValues mapAttrs attrByPath
     traceValFn;
 
+  enableNimbus = attrByPath ["status_go" "enable_nimbus"] false config;
   utils = callPackage ./utils.nix { inherit xcodeWrapper; };
   gomobile = callPackage ./gomobile { inherit (androidPkgs) platform-tools; inherit xcodeWrapper utils buildGoPackage; };
-  nimbus = if targetNimbus then callPackage ./nimbus { } else { wrappers-android = { }; };
+  nimbus = if enableNimbus then callPackage ./nimbus { } else { wrappers-android = { }; };
   buildStatusGoDesktopLib = callPackage ./build-desktop-status-go.nix { inherit buildGoPackage go xcodeWrapper utils; };
   buildStatusGoMobileLib = callPackage ./build-mobile-status-go.nix { inherit buildGoPackage go gomobile xcodeWrapper utils androidPkgs; };
   srcData =
@@ -54,7 +55,7 @@ let
   mobileConfigs = {
     android =
       let
-        androidLevel = if targetNimbus then "23" else "18"; # Target Android API level 23 when linking with Nimbus to avoid undefined stderr/stdout symbols when linking
+        androidLevel = if enableNimbus then "23" else "18"; # Target Android API level 23 when linking with Nimbus to avoid undefined stderr/stdout symbols when linking
       in rec {
         name = "android";
         outputFileName = "status-go-${srcData.shortRev}.aar";
@@ -66,13 +67,13 @@ let
         gomobileExtraFlags = [ "-androidapi ${androidLevel}" ];
         platforms = {
           x86 = {
-            linkNimbus = targetNimbus;
-            nimbus = assert targetNimbus; nimbus.wrappers-android.x86;
+            linkNimbus = enableNimbus;
+            nimbus = assert enableNimbus; nimbus.wrappers-android.x86;
             gomobileTarget = "${name}/386";
           };
           arm64 = {
-            linkNimbus = targetNimbus;
-            nimbus = assert targetNimbus; nimbus.wrappers-android.arm64;
+            linkNimbus = enableNimbus;
+            nimbus = assert enableNimbus; nimbus.wrappers-android.arm64;
             gomobileTarget = "${name}/arm64";
           };
         };
@@ -84,18 +85,18 @@ let
       gomobileExtraFlags = [ "-iosversion=8.0" ];
       platforms = {
         ios = {
-          linkNimbus = targetNimbus;
+          linkNimbus = enableNimbus;
           nimbus = assert false; null; # TODO
           gomobileTarget = name;
         };
       };
       # platforms = {
       #   x86 = {
-      #     nimbus = assert targetNimbus; nimbus.wrappers-ios.x86;
+      #     nimbus = assert enableNimbus; nimbus.wrappers-ios.x86;
       #     gomobileTarget = "${name}/386";
       #   };
       #   arm64 = {
-      #     nimbus = assert targetNimbus; nimbus.wrappers-ios.arm64;
+      #     nimbus = assert enableNimbus; nimbus.wrappers-ios.arm64;
       #     gomobileTarget = "${name}/arm64";
       # };
     };
@@ -112,7 +113,7 @@ let
   };
   currentHostConfig = if stdenv.isDarwin then hostConfigs.darwin else hostConfigs.linux;
 
-  goBuildFlags = concatStringsSep " " [ "-v" (optionalString targetNimbus "-tags='nimbus'") ];
+  goBuildFlags = concatStringsSep " " [ "-v" (optionalString enableNimbus "-tags='nimbus'") ];
   # status-go params to be set at build time, important for About section and metrics
   goBuildParams = {
     GitCommit = srcData.rev;

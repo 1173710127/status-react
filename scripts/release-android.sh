@@ -11,6 +11,10 @@ if [ -n "${STATUS_GO_SRC_OVERRIDE}" ]; then
   statusGoConfig+="status_go.src_override=\"${STATUS_GO_SRC_OVERRIDE}\";"
 fi
 
+if [ -n "${STATUS_GO_ENABLE_NIMBUS}" ]; then
+  statusGoConfig+="status_go.enable_nimbus=true;"
+fi
+
 nixOpts=(
   "--arg config {${statusGoConfig}}"
   "--arg env {BUILD_ENV=\"${BUILD_ENV}\";ANDROID_ABI_SPLIT=\"${ANDROID_ABI_SPLIT}\";ANDROID_ABI_INCLUDE=\"${ANDROID_ABI_INCLUDE}\";}"
