@@ -19,11 +19,15 @@
       [react/text {:style (merge {:color colors/gray :font-size 12 :font-weight "400"} additional-styles)}
        alias])))
 
+(def ^:private reply-symbol "↪ ")
+
 (defn format-reply-author [from alias username current-public-key style]
   (or (and (= from current-public-key)
            [react/text {:style (style true)}
-            (i18n/label :t/You)])
-      (format-author alias style username)))
+            (str reply-symbol (i18n/label :t/You))])
+      (format-author (str reply-symbol alias)
+                     style
+                     (some-> username (str reply-symbol)))))
 
 (def ^:private styling->prop
   {:bold      {:style {:font-weight "700"}}

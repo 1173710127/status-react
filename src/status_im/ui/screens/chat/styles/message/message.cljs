@@ -219,7 +219,7 @@
   (assoc (message-author-name chosen?)
          :padding-bottom  5
          :padding-top     4
-         :padding-left    6
+         :padding-left    0
          :color           (if outgoing
                             colors/white-transparent-70
                             colors/gray)))

@@ -45,12 +45,10 @@
     (when (or quote text)
       [react/view {:style (style/quoted-message-container outgoing)}
        [react/view {:style style/quoted-message-author-container}
-        [vector-icons/tiny-icon :tiny-icons/tiny-reply
-         {:color (if outgoing colors/white-transparent-70 colors/gray)}]
-        (chat.utils/format-reply-author
+        [chat.utils/format-reply-author
          (or from (:from quote))
          alias ens-name current-public-key
-         (partial style/quoted-message-author outgoing))]
+         (partial style/quoted-message-author outgoing)]]
 
        [react/text {:style           (style/quoted-message-text outgoing)
                     :number-of-lines 5}
