@@ -67,6 +67,7 @@ var TopLevel = {
   "confirmMessagesProcessedByID" : function () {},
   "connectionChange" : function () {},
   "console" : function () {},
+  "contacts": function () {},
   "ContactRequest" : function () {},
   "ContactRequestConfirmed" : function () {},
   "ContactRequestConfirmedHandler" : function () {},

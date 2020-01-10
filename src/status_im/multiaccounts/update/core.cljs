@@ -1,6 +1,5 @@
 (ns status-im.multiaccounts.update.core
   (:require [status-im.contact.db :as contact.db]
-
             [status-im.ethereum.json-rpc :as json-rpc]
             [status-im.transport.message.contact :as message.contact]
             [status-im.transport.message.protocol :as protocol]
@@ -8,36 +7,12 @@
             [status-im.utils.types :as types]
             [taoensso.timbre :as log]))
 
-(fx/defn multiaccount-update-message [{:keys [db] :as cofx}]
+(fx/defn send-multiaccount-update [{:keys [db]}]
   (let [multiaccount (:multiaccount db)
         {:keys [name preferred-name photo-path address]} multiaccount]
-    (message.contact/ContactUpdate. (or preferred-name name) photo-path address nil nil)))
-
-(fx/defn send-multiaccount-update [cofx]
-  (protocol/send
-   (multiaccount-update-message cofx)
-   nil
-   cofx))
-
-(fx/defn send-contact-update-fx
-  [{:keys [db] :as cofx} chat-id payload]
-  (protocol/send-with-pubkey cofx
-                             {:chat-id       chat-id
-                              :payload       payload
-                              :success-event [:transport/contact-message-sent chat-id]}))
-
-(fx/defn contact-public-keys [{:keys [db]}]
-  (reduce (fn [acc [_ {:keys [public-key] :as contact}]]
-            (if (contact.db/active? contact)
-              (conj acc public-key)
-              acc))
-          #{}
-          (:contacts/contacts db)))
-
-(fx/defn send-contact-update [cofx payload]
-  (let [public-keys (contact-public-keys cofx)]
-    ;;NOTE: chats with contacts use public-key as chat-id
-    (map #(send-contact-update-fx % payload) public-keys)))
+    {::json-rpc/call [{:method "shhext_sendContactUpdates"
+                       :params [(or preferred-name name) photo-path]
+                       :on-success #(println "SUCCESS SEND CONTACT UPDATES")}]}))
 
 (fx/defn multiaccount-update
   "Takes effects (containing :db) + new multiaccount fields, adds all effects necessary for multiaccount update.

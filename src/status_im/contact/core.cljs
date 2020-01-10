@@ -1,10 +1,12 @@
 (ns status-im.contact.core
   (:require
    [re-frame.core :as re-frame]
+   [taoensso.timbre :as log]
    [status-im.multiaccounts.model :as multiaccounts.model]
    [status-im.transport.filters.core :as transport.filters]
    [status-im.contact.db :as contact.db]
    [status-im.ethereum.core :as ethereum]
+   [status-im.ethereum.json-rpc :as json-rpc]
    [status-im.data-store.contacts :as contacts-store]
    [status-im.mailserver.core :as mailserver]
    [status-im.transport.message.contact :as message.contact]
@@ -51,6 +53,16 @@
      :profile-image photo-path
      :address       address}))
 
+(fx/defn ensure-contact
+  [{:keys [db] :as cofx}
+   {:keys [public-key] :as contact}]
+  (let [new? (get-in db [:contacts/contacts public-key])]
+    (fx/merge cofx
+              {:db (-> db
+                       (update-in [:contacts/contacts public-key] merge contact))}
+              (when new?
+                (transport.filters/load-contact contact)))))
+
 (fx/defn upsert-contact
   [{:keys [db] :as cofx}
    {:keys [public-key] :as contact}]
@@ -62,9 +74,10 @@
 
 (fx/defn send-contact-request
   [{:keys [db] :as cofx} {:keys [public-key] :as contact}]
-  (if (contact.db/pending? contact)
-    (protocol/send (message.contact/map->ContactRequest (own-info db)) public-key cofx)
-    (protocol/send (message.contact/map->ContactRequestConfirmed (own-info db)) public-key cofx)))
+  (let [{:keys [name profile-image]} (own-info db)]
+    {::json-rpc/call [{:method "shhext_sendContactUpdate"
+                       :params [public-key name profile-image]
+                       :on-success #(log/debug "contact request sent" public-key)}]}))
 
 (fx/defn add-contact
   "Add a contact and set pending to false"
