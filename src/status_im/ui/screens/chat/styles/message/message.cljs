@@ -46,11 +46,12 @@
 (defn message-timestamp-text
   [justify-timestamp? outgoing rtl? emoji?]
   (merge message-timestamp
-         {:color (if (and outgoing (not emoji?))
-                   colors/white-transparent-70
-                   colors/gray)}
+         {:line-height 10
+          :color       (if (and outgoing (not emoji?))
+                         colors/white-transparent-70
+                         colors/gray)}
          (when justify-timestamp? {:position              :absolute
-                                   :bottom                10
+                                   :bottom                (+ 6 3) ; 6 Bubble bottom, 3 message baseline
                                    (if rtl? :left :right) 12})))
 
 (def message-expand-button
