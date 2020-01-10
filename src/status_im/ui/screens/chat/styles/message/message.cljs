@@ -217,9 +217,11 @@
 
 (defn quoted-message-author [outgoing chosen?]
   (assoc (message-author-name chosen?)
-         :padding-bottom  5
-         :padding-top     4
+         :padding-bottom  6
+         :padding-top     0
          :padding-left    0
+         :line-height     18
+         :font-weight    "500"
          :color           (if outgoing
                             colors/white-transparent-70
                             colors/gray)))
